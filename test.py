@@ -7,27 +7,22 @@ from io import BytesIO
 from skimage.transform import resize
 from skimage.io import imread
 import pickle
-
-food_items = {
-    'indian' : [ "Samosa", "Dosa" ],
-    'american' : [ "Hot Dog", "Apple Pie"],
-    'italian' : [ "Ravioli", "Pizza"]
-}
-
-app = FastAPI()
-@app.get('/ping')
-async def re():
-    return 'Meo'
-
-@app.post('/predict')
-async def predict(file: UploadFile):
-    contents =await file.read()
-    conv = resize_image(contents)
-    r=load_model().predict(conv)
-    rp=load_model().predict_proba(conv)
+import imageio as iio
+import asyncio
+ 
+# read an image 
+img = iio.imread("download.jpeg")
+img_resize=resize(img,(150,150,3))
+l=[img_resize.flatten()]
+def predict():
+    
+    r=load_model().predict(l)
+    rp=load_model().predict_proba(l)
     classes = ['Leaf bright','Brown spot','Leaf smut']
-    print(r)
-    classes[r[0]]
+    print({
+        "Predicted": classes[r[0]],
+        "Confidance": np.max(rp[0])
+    })
     return {
         "Predicted": classes[r[0]],
         "Confidance": np.max(rp[0])
@@ -44,5 +39,5 @@ def load_model():
     loaded_model = pickle.load(open(filename, 'rb'))
     return loaded_model
 
-if __name__=='__main__':
-    uvicorn.run(app,host='localhost',port=8000)
+r = predict()
+print(r)
